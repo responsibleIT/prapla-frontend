@@ -1,14 +1,12 @@
 <script>
-	import Header from './Header.svelte';
+    import Header from './Header.svelte';
     import "../app.css";
 </script>
 
-<div class="app">
-	<Header />
+<div class="app h-screen">
+<!--    <Header/>-->
 
-	<main>
-		<slot />
-	</main>
+    <slot/>
 </div>
 
 <style lang="postcss">
