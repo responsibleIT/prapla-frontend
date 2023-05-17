@@ -9,6 +9,7 @@
     let correct = false;
     let hasStarted = false;
     let wrong = false;
+    let finished = false;
 
     function handleCorrectClick() {
         count += step;
@@ -18,8 +19,7 @@
         wrong = false;
 
         if (percentage >= 100) {
-            count = 0;
-            percentage = count;
+            finished = true;
         }
     }
 
@@ -46,14 +46,19 @@
 </script>
 
 {#if $words.length !== 0}
-    <div class="flex flex-col items-center h-screen" class:bg-green-100={correct} class:bg-red-100={wrong}>
+    <div class="flex flex-col items-center h-screen" class:bg-green-100={correct} class:bg-orange-100={wrong}>
         <div class="flex justify-center items-center p-4 w-full" id="progress-header">
-            <div class="border-solid border-2 border-slate-400 w-1/2 h-10 p-2 rounded-full" class:border-green-400={correct} class:border-red-400={wrong}>
-                <div class="h-5 bg-slate-400 rounded-full" style="width: {percentage}%" class:bg-green-400={correct} class:bg-red-500={wrong}></div>
+            <div class="grow"></div>
+            <div class="border-solid border-2 border-slate-400 w-1/2 h-10 p-2 ml-16 rounded-full"
+                 class:border-green-400={correct} class:border-orange-400={wrong}>
+                <div class="h-5 bg-slate-400 rounded-full" style="width: {percentage}%" class:bg-green-400={correct}
+                     class:bg-orange-500={wrong}></div>
             </div>
+            <div class="grow"></div>
             <a href="/"
-               class="flex justify-center items-center border-solid border-2 border-slate-400 p-3 m-3 h-10 rounded-full align-middle" class:border-green-400={correct} class:border-red-400={wrong}><b
-                    class="text-slate-400" class:text-green-400={correct} class:text-red-400={wrong}>×</b></a>
+               class="flex justify-center items-center border-solid border-2 border-slate-400 p-3 m-3 h-10 rounded-full align-middle"
+               class:border-green-400={correct} class:border-red-400={wrong}><b
+                    class="text-slate-400" class:text-green-400={correct} class:text-orange-400={wrong}>×</b></a>
         </div>
 
         {#each [$words[imageIndex]] as word (imageIndex)}
@@ -64,14 +69,25 @@
             </figure>
 
             {#if correct}
-                <button class="flex justify-center items-center border-solid border-2 border-black w-40 h-24 mt-8 rounded-full"
-                        on:click={handleCorrectClick}>
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                         stroke="currentColor" class="w-6 h-6">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                              d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3"/>
-                    </svg>
-                </button>
+                {#if finished}
+                    <a href="/app/quiz"
+                       class="flex justify-center items-center border-solid border-2 border-black w-40 h-24 mt-8 rounded-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                             stroke="currentColor" class="w-6 h-6">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3"/>
+                        </svg>
+                    </a>
+                {:else}
+                    <button class="flex justify-center items-center border-solid border-2 border-black w-40 h-24 mt-8 rounded-full"
+                            on:click={handleCorrectClick}>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                             stroke="currentColor" class="w-6 h-6">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3"/>
+                        </svg>
+                    </button>
+                {/if}
             {:else}
                 {#if !hasStarted}
                     <button class="flex justify-center items-center border-solid border-2 border-black w-40 h-24 mt-8 rounded-full"
