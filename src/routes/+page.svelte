@@ -3,7 +3,7 @@
 </script>
 
 <svelte:head>
-    <title>Home</title>
+    <title>Prapla</title>
     <meta name="description" content="Prapla"/>
 </svelte:head>
 
@@ -17,14 +17,15 @@
 </section>
 
 <style>
-    section{
+    section {
         position: relative;
         width: 100%;
         height: 100vh;
         background: aliceblue;
         overflow: hidden;
     }
-    section .air{
+
+    section .air {
         position: absolute;
         color: white;
         bottom: 0;
@@ -35,8 +36,9 @@
         background-size: 1000px 100px;
         animation: wave 10s linear infinite;
     }
-    @keyframes wave{
-        100%{
+
+    @keyframes wave {
+        100% {
             background-position-x: 1000px;
         }
     }

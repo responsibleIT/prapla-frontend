@@ -1,10 +1,13 @@
 <script>
-    import {quiz, user} from "$lib/store.js";
+    import {quiz, user, words} from "$lib/store.js";
     import Quiz from "$lib/components/Quiz.svelte";
+    import {browser} from "$app/environment";
+
+    if (browser && $words.length === 0) {
+        window.location.href = '/';
+    }
 </script>
 
 {#if $quiz.length !== 0}
     <Quiz quiz={quiz}/>
-{:else}
-    <p>Niet ingelogd jij bent, ga <a href="/">terug</a></p>
 {/if}
