@@ -2,6 +2,7 @@
     import wordmark from "$lib/images/wordmark.svg";
     import Particles from "svelte-particles";
     import {loadFull} from "tsparticles";
+    import applause from "$lib/sounds/applause.mp3";
 
     let particlesConfig = {
         "fullScreen": {
@@ -131,6 +132,7 @@
 
     let particlesInit = async engine => {
         await loadFull(engine);
+        new Audio(applause).play();
     };
 </script>
 

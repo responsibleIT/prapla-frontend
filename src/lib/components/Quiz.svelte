@@ -1,15 +1,54 @@
 <script>
     import wordmark from "$lib/images/wordmark.svg";
+    import correct_sound from "$lib/sounds/static_sounds_feedback_positive.mp3";
+    import incorrect_sound from "$lib/sounds/static_sounds_feedback_fart.mp3";
+    import finished_sound from "$lib/sounds/static_sounds_feedback_completed.mp3";
+
+    import {browser} from "$app/environment";
 
     export let quiz;
     let correct = false;
     let wrong = false;
     let answered = false;
     let finished = false;
+    let step = 100 / $quiz.length;
     let questionIndex = 0;
     let count = 0;
     let percentage = count;
     let correctAnswer = $quiz[questionIndex].find(answer => answer.correct);
+
+    $: {
+        if (percentage >= 100) {
+            finished = true;
+        }
+    }
+
+    $: if (correct) {
+        document.querySelectorAll("[id=quiz-answer]").forEach(element => element.disabled = true);
+        new Audio(correct_sound).play();
+    }
+
+    $: if (wrong) {
+        document.querySelectorAll("[id=quiz-answer]").forEach(element => element.disabled = true);
+        new Audio(incorrect_sound).play();
+    }
+
+    $: if (finished) {
+        document.querySelectorAll("[id=quiz-answer]").forEach(element => element.disabled = true);
+        new Audio(finished_sound).play();
+    }
+
+    if (browser) {
+        const utterance = new SpeechSynthesisUtterance("Welk plaatje hoort bij... " + correctAnswer.word);
+        utterance.lang = 'nl-NL';
+        utterance.rate = 0.7;
+        utterance.pitch = 1.2;
+
+        speechSynthesis.speak(utterance);
+        utterance.onend = (event) => {
+            document.querySelectorAll("[id=quiz-answer]").forEach(element => element.disabled = false);
+        }
+    }
 
     function validate(answer) {
         if (answered) return;
@@ -34,6 +73,18 @@
         correct = false;
         wrong = false;
         answered = false;
+
+        if (browser) {
+            const utterance = new SpeechSynthesisUtterance("Welk plaatje hoort bij... " + correctAnswer.word);
+            utterance.lang = 'nl-NL';
+            utterance.rate = 0.7;
+            utterance.pitch = 1.2;
+
+            speechSynthesis.speak(utterance);
+            utterance.onend = (event) => {
+                document.querySelectorAll("[id=quiz-answer]").forEach(element => element.disabled = false);
+            }
+        }
     }
 
     function handleCorrect() {
@@ -49,6 +100,18 @@
 
             questionIndex++;
             correctAnswer = $quiz[questionIndex].find(answer => answer.correct);
+        }
+
+        if (browser) {
+            const utterance = new SpeechSynthesisUtterance("Welk plaatje hoort bij... " + correctAnswer.word);
+            utterance.lang = 'nl-NL';
+            utterance.rate = 0.7;
+            utterance.pitch = 1.2;
+
+            speechSynthesis.speak(utterance);
+            utterance.onend = (event) => {
+                document.querySelectorAll("[id=quiz-answer]").forEach(element => element.disabled = false);
+            }
         }
     }
 
@@ -75,7 +138,8 @@
                 <u>{correctAnswer.word.split(" ")[0]}</u> {correctAnswer.word.split(" ")[1]}?</h1>
             <div class="flex p-8 space-x-4">
                 {#each question as answer}
-                    <button class="border-2 border-black rounded-xl p-4 w-1/4" on:click={validate(answer.correct)}>
+                    <button disabled id="quiz-answer" class="border-2 border-black rounded-xl p-4 w-1/4"
+                            on:click={validate(answer.correct)}>
                         <img src="{answer.image}" alt="{answer.correct}"/>
                     </button>
                 {/each}
@@ -91,34 +155,45 @@
                           d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3"/>
                 </svg>
             </a>
-        {/if}
-
-        {#if answered}
-            {#if finished}
-                <a href="/app/done"
-                   class="flex justify-center items-center border-solid border-2 border-black w-40 h-24 mt-8 rounded-full">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                         stroke="currentColor" class="w-6 h-6">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                              d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3"/>
-                    </svg>
-                </a>
-            {:else }
-                {#if correct}
-                    <button class="flex justify-center items-center border-solid border-2 border-black w-40 h-24 mt-8 rounded-full"
-                            on:click={handleCorrect}>
+        {:else}
+            {#if answered}
+                {#if finished}
+                    <a href="/app/done"
+                       class="flex justify-center items-center border-solid border-2 border-black w-40 h-24 mt-8 rounded-full">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                              stroke="currentColor" class="w-6 h-6">
                             <path stroke-linecap="round" stroke-linejoin="round"
                                   d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3"/>
                         </svg>
-                    </button>
+                    </a>
+                {:else }
+                    {#if correct}
+                        <button class="flex justify-center items-center border-solid border-2 border-black w-40 h-24 mt-8 rounded-full"
+                                on:click={handleCorrect}>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                 stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                      d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3"/>
+                            </svg>
+                        </button>
+                    {:else }
+                        <button class="flex justify-center items-center border-solid border-2 border-black w-40 h-24 mt-8 rounded-full"
+                                on:click={handleWrong}>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                 stroke-width="2"
+                                 stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                      d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/>
+                            </svg>
+                        </button>
+                    {/if}
                 {/if}
             {/if}
         {/if}
+
         <div class="grow"></div>
         <footer class="flex align-top justify-start w-full m-8 pl-8">
-            <img src={wordmark} class="w-36" alt="wordmark">
+            <img src={wordmark} class="w-36 absolute bottom-0 left-0 m-8" alt="wordmark">
         </footer>
     </div>
 {/if}

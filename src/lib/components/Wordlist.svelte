@@ -6,14 +6,16 @@
     import {onMount} from "svelte";
     import * as Vosk from "vosk-browser";
     import audioprocessor from "$lib/processor.js?url";
+    import {browser} from "$app/environment";
+
+    import correct_sound from "$lib/sounds/static_sounds_feedback_positive.mp3";
+    import incorrect_sound from "$lib/sounds/static_sounds_feedback_fart.mp3";
 
     export let words;
     let usesVosk = false;
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
-    let mediaStream;
     let audioContext;
     let recognizerProcessor;
-    let source;
     let recognition;
     let model;
     let channel;
@@ -30,6 +32,11 @@
     let finished = false;
     let skip = false;
     let tries = 0;
+
+    let speechSynthesis;
+    if (browser) {
+        speechSynthesis = window.speechSynthesis;
+    }
 
     async function initVosk() {
         channel = new MessageChannel();
@@ -52,8 +59,6 @@
             let arrayBuffer = await blob.arrayBuffer();
             let audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
 
-            document.getElementById("mic-elem").style.opacity = "0";
-
             recognition.acceptWaveform(audioBuffer);
             setTimeout(() => {
                 recognition.retrieveFinalResult();
@@ -73,6 +78,8 @@
     }
 
     onMount(async () => {
+        document.getElementById("mic-elem").style.display = "none";
+
         try {
             recognition = new SpeechRecognition();
             recognition.lang = 'nl-NL';
@@ -87,15 +94,15 @@
             recognition.onend = (event) => {
                 recognition.stop();
 
-                document.getElementById("mic-elem").style.opacity = "0";
+                document.getElementById("mic-elem").style.display = "none";
 
                 console.log("og", result);
                 validate(result, $words[imageIndex].word);
             };
         } catch (e) {
-            document.getElementById("mic-button").style.display = "none";
+            document.getElementById("control").style.opacity = "0";
             initVosk().then(() => {
-                document.getElementById("mic-button").style.display = "flex";
+                document.getElementById("control").style.opacity = "1";
             });
         }
 
@@ -108,13 +115,47 @@
             hideScrollbar: true
         });
         record = wavesurfer.registerPlugin(RecordPlugin.create())
+        record.on("stopRecording", () => {
+            document.getElementById("mic-elem").style.display = "none";
+        })
+
+        if (browser) {
+            document.getElementById("control").style.opacity = "0";
+
+            const utterance = new SpeechSynthesisUtterance($words[imageIndex].word);
+            utterance.lang = 'nl-NL';
+            utterance.rate = 0.7;
+            utterance.pitch = 1.2;
+
+            speechSynthesis.speak(utterance);
+            utterance.onend = (event) => {
+                document.getElementById("control").style.opacity = "1";
+            }
+        }
     });
 
-    $: if (skip) {
-        tries = 0;
+
+    $: if (count === 100 - step) {
+        skip = false;
+        if (usesVosk) {
+            recognition.remove();
+            model.terminate();
+        }
+        finished = true;
     }
 
+    $: if (correct) {
+        new Audio(correct_sound).play();
+    }
+
+    $: if (wrong) {
+        new Audio(incorrect_sound).play();
+    }
+
+
     function handleNextClick() {
+        document.getElementById("control").style.opacity = "0";
+
         if (count === 100 - step) {
             skip = false;
             if (usesVosk) {
@@ -130,22 +171,48 @@
         wrong = false;
         hasStarted = false;
         skip = false;
+        tries = 0;
 
+        if (browser) {
+            const utterance = new SpeechSynthesisUtterance($words[imageIndex].word);
+            utterance.lang = 'nl-NL';
+            utterance.rate = 0.7;
+            utterance.pitch = 1.2;
+
+            speechSynthesis.speak(utterance);
+            utterance.onend = (event) => {
+                document.getElementById("control").style.opacity = "1";
+            }
+        }
     }
 
     function handleRepeatClick() {
+        document.getElementById("control").style.opacity = "0";
+
         wrong = false;
         correct = false;
         hasStarted = false;
         skip = false;
         tries++;
+
+        if (browser) {
+            const utterance = new SpeechSynthesisUtterance($words[imageIndex].word);
+            utterance.lang = 'nl-NL';
+            utterance.rate = 0.7;
+            utterance.pitch = 1.2;
+
+            speechSynthesis.speak(utterance);
+            utterance.onend = (event) => {
+                document.getElementById("control").style.opacity = "1";
+            }
+        }
     }
 
     async function handleMic() {
+        document.getElementById("mic-elem").style.display = "block";
         hasStarted = true;
 
         console.log("tries", tries);
-        document.getElementById("mic-elem").style.opacity = "1";
 
         if (!record.isRecording()) {
             await record.startRecording();
@@ -159,6 +226,9 @@
     }
 
     let validate = (actual, target) => {
+        actual = actual.toLowerCase().trim();
+        target = target.toLowerCase().trim();
+
         if (tries >= 3) {
             skip = true;
             return;
@@ -198,10 +268,7 @@
                 <img class="m-4 h-96 max-w-full rounded-lg" src="{word.image}" alt="image description">
             </figure>
 
-            <div class="grid">
-                <div id="mic-elem" class="w-40 h-24 pointer-events-none"
-                     style="grid-area: 1/1">
-                </div>
+            <div id="control" class="grid">
                 {#if skip}
                     {#if count === 100 - step}
                         <a href="/app/quiz"
@@ -280,8 +347,11 @@
                 {/if}
             </div>
         {/each}
+        <div id="mic-elem" class="absolute w-40 h-24 mt-8 pointer-events-none bottom-20 z-20"
+             style="grid-area: 1/1">
+        </div>
         <footer class="flex align-top justify-start w-full m-8 pl-8">
-            <img src={wordmark} class="w-36" alt="wordmark">
+            <img src={wordmark} class="w-36 absolute bottom-0 left-0 m-8" alt="wordmark">
         </footer>
     </div>
 {/if}
