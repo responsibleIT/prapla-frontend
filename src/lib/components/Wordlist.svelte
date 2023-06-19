@@ -1,16 +1,22 @@
 <script>
     import wordmark from '$lib/images/wordmark.svg'
+    import dutch from '$lib/models/dutch.zip'
     import WaveSurfer from "wavesurfer.js";
     import RecordPlugin from "$lib/record.js";
     import {onMount} from "svelte";
+    import * as Vosk from "vosk-browser";
+    import audioprocessor from "$lib/processor.js?url";
 
     export let words;
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'nl-NL';
-    recognition.continuous = false;
-    recognition.interimResults = true;
-    recognition.maxAlternatives = 5;
+    let usesVosk = false;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+    let mediaStream;
+    let audioContext;
+    let recognizerProcessor;
+    let source;
+    let recognition;
+    let model;
+    let channel;
 
     let wavesurfer;
     let record;
@@ -18,13 +24,81 @@
     let step = 100 / $words.length
     let count = 0;
     let imageIndex = 0;
-    let percentage = count;
     let correct = false;
     let hasStarted = false;
     let wrong = false;
     let finished = false;
+    let skip = false;
+    let tries = 0;
+
+    async function initVosk() {
+        channel = new MessageChannel();
+        model = await Vosk.createModel(dutch, -1);
+        model.registerPort(channel.port1)
+
+        audioContext = new AudioContext();
+        await audioContext.audioWorklet.addModule(audioprocessor);
+        recognizerProcessor = new AudioWorkletNode(audioContext, 'processor', {
+            channelCount: 1,
+            numberOfInputs: 1,
+            numberOfOutputs: 1
+        });
+
+        recognition = new model.KaldiRecognizer(44100);
+        recognition.setWords(true);
+
+        record.on('stopRecording', async () => {
+            let blob = await fetch(record.getRecordedUrl()).then(r => r.blob());
+            let arrayBuffer = await blob.arrayBuffer();
+            let audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+            document.getElementById("mic-elem").style.opacity = "0";
+
+            recognition.acceptWaveform(audioBuffer);
+            setTimeout(() => {
+                recognition.retrieveFinalResult();
+            }, 10000);
+        });
+
+        recognition.on("result", (message) => {
+            result = message.result.text;
+
+            console.log("vosk", result)
+            validate(result, $words[imageIndex].word);
+        });
+
+        recognizerProcessor.port.postMessage({action: 'init', recognizerId: recognition.id}, [channel.port2])
+
+        usesVosk = true;
+    }
 
     onMount(async () => {
+        try {
+            recognition = new SpeechRecognition();
+            recognition.lang = 'nl-NL';
+            recognition.continuous = false;
+            recognition.interimResults = true;
+            recognition.maxAlternatives = 5;
+
+            recognition.onresult = (event) => {
+                result = event.results[0][0].transcript;
+            }
+
+            recognition.onend = (event) => {
+                recognition.stop();
+
+                document.getElementById("mic-elem").style.opacity = "0";
+
+                console.log("og", result);
+                validate(result, $words[imageIndex].word);
+            };
+        } catch (e) {
+            document.getElementById("mic-button").style.display = "none";
+            initVosk().then(() => {
+                document.getElementById("mic-button").style.display = "flex";
+            });
+        }
+
         wavesurfer = WaveSurfer.create({
             container: document.getElementById("mic-elem"),
             waveColor: 'slategray',
@@ -36,55 +110,60 @@
         record = wavesurfer.registerPlugin(RecordPlugin.create())
     });
 
-    function handleCorrectClick() {
+    $: if (skip) {
+        tries = 0;
+    }
+
+    function handleNextClick() {
+        if (count === 100 - step) {
+            skip = false;
+            if (usesVosk) {
+                recognition.remove();
+                model.terminate();
+            }
+            finished = true;
+        }
+
         count += step;
-        percentage = count;
         imageIndex = (imageIndex + 1) % $words.length
         correct = false;
         wrong = false;
         hasStarted = false;
+        skip = false;
 
-        if (percentage >= 100) {
-            finished = true;
-        }
     }
 
-    function handleWrongClick() {
+    function handleRepeatClick() {
         wrong = false;
         correct = false;
         hasStarted = false;
+        skip = false;
+        tries++;
     }
 
-    function handleMic() {
+    async function handleMic() {
         hasStarted = true;
-        recognition.start();
 
-        if (wavesurfer.isPlaying()) {
-            wavesurfer.pause()
+        console.log("tries", tries);
+        document.getElementById("mic-elem").style.opacity = "1";
+
+        if (!record.isRecording()) {
+            await record.startRecording();
+            setTimeout(() => {
+                record.stopRecording();
+            }, 5000);
         }
+        if (!usesVosk) {
+            recognition.start();
+        }
+    }
 
-        if (record.isRecording()) {
+    let validate = (actual, target) => {
+        if (tries >= 3) {
+            skip = true;
             return;
         }
 
-        record.startRecording();
-    }
-
-    recognition.onresult = (event) => {
-        result = event.results[0][0].transcript;
-    }
-
-    recognition.onend = (event) => {
-        record.stopRecording();
-        document.getElementById("mic-elem").innerHTML = "";
-        recognition.stop();
-
-        console.log(result);
-        validate(result, $words[imageIndex].word);
-    };
-
-
-    let validate = (actual, target) => {
         if (actual !== target) {
             wrong = true;
             return;
@@ -102,7 +181,7 @@
             <div class="grow"></div>
             <div class="border-solid border-2 border-slate-400 w-1/2 h-10 p-2 ml-16 rounded-full"
                  class:!border-green-400={correct} class:!border-orange-400={wrong}>
-                <div class="h-5 bg-slate-400 rounded-full" style="width: {percentage}%" class:!bg-green-400={correct}
+                <div class="h-5 bg-slate-400 rounded-full" style="width: {count}%" class:!bg-green-400={correct}
                      class:!bg-orange-500={wrong}></div>
             </div>
             <div class="grow"></div>
@@ -119,12 +198,17 @@
                 <img class="m-4 h-96 max-w-full rounded-lg" src="{word.image}" alt="image description">
             </figure>
 
-            <div id="mic-elem" class="w-40 h-24 m-8">
-                {#if correct}
-                    {#if finished}
+            <div class="grid">
+                <div id="mic-elem" class="w-40 h-24 pointer-events-none"
+                     style="grid-area: 1/1">
+                </div>
+                {#if skip}
+                    {#if count === 100 - step}
                         <a href="/app/quiz"
-                           class="flex justify-center items-center border-solid border-2 border-black w-40 h-24 mt-8 rounded-full">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                           class="flex justify-center items-center border-solid border-2 border-black w-40 h-24 mt-8 rounded-full"
+                           style="grid-area: 1/1">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                 stroke-width="1.5"
                                  stroke="currentColor" class="w-6 h-6">
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                       d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3"/>
@@ -132,8 +216,35 @@
                         </a>
                     {:else}
                         <button class="flex justify-center items-center border-solid border-2 border-black w-40 h-24 mt-8 rounded-full"
-                                on:click={handleCorrectClick}>
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                on:click={handleNextClick}
+                                style="grid-area: 1/1">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                 stroke-width="1.5"
+                                 stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                      d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3"/>
+                            </svg>
+                        </button>
+                    {/if}
+                {/if}
+                {#if correct}
+                    {#if finished}
+                        <a href="/app/quiz"
+                           class="flex justify-center items-center border-solid border-2 border-black w-40 h-24 mt-8 rounded-full"
+                           style="grid-area: 1/1">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                 stroke-width="1.5"
+                                 stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                      d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3"/>
+                            </svg>
+                        </a>
+                    {:else}
+                        <button class="flex justify-center items-center border-solid border-2 border-black w-40 h-24 mt-8 rounded-full"
+                                on:click={handleNextClick}
+                                style="grid-area: 1/1">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                 stroke-width="1.5"
                                  stroke="currentColor" class="w-6 h-6">
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                       d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3"/>
@@ -142,7 +253,9 @@
                     {/if}
                 {:else}
                     {#if !hasStarted}
-                        <button class="flex justify-center items-center border-solid border-2 border-black w-40 h-24 mt-8 rounded-full"
+                        <button id="mic-button"
+                                class="flex justify-center items-center border-solid border-2 border-black w-40 h-24 mt-8 rounded-full"
+                                style="grid-area: 1/1"
                                 on:click={handleMic}>
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width=2
                                  stroke="currentColor" class="w-6 h-6">
@@ -153,17 +266,15 @@
                     {:else}
                         {#if wrong}
                             <button class="flex justify-center items-center border-solid border-2 border-black w-40 h-24 mt-8 rounded-full"
-                                    on:click={handleWrongClick}>
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                                    on:click={handleRepeatClick}
+                                    style="grid-area: 1/1">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                     stroke-width="2"
                                      stroke="currentColor" class="w-6 h-6">
                                     <path stroke-linecap="round" stroke-linejoin="round"
                                           d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/>
                                 </svg>
                             </button>
-                        {:else}
-<!--                            <input id="mic-input-elem"-->
-<!--                                   class="bg-gray-50 text-gray-900 text-sm border-solid border-2 border-black w-40 h-24 mt-8 rounded-full"-->
-<!--                                   on:change={(e) => validate(e.target.value, word.word)}/>-->
                         {/if}
                     {/if}
                 {/if}
