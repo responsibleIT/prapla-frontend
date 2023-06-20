@@ -1,5 +1,5 @@
 <script>
-    import {words, user} from "$lib/store.js";
+    import {words, user, quiz} from "$lib/store.js";
     import Wordlist from "$lib/components/Wordlist.svelte";
     import {browser} from '$app/environment';
 
@@ -10,5 +10,5 @@
 </script>
 
 {#if $words.length !== 0}
-    <Wordlist words={words}/>
+    <Wordlist words={words} quiz={quiz}/>
 {/if}

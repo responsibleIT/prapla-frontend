@@ -10,8 +10,12 @@
 
     import correct_sound from "$lib/sounds/static_sounds_feedback_positive.mp3";
     import incorrect_sound from "$lib/sounds/static_sounds_feedback_fart.mp3";
+    import AnchorButton from "$lib/components/AnchorButton.svelte";
+    import Button from "$lib/components/Button.svelte";
 
     export let words;
+    export let quiz;
+
     let usesVosk = false;
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
     let audioContext;
@@ -23,7 +27,7 @@
     let wavesurfer;
     let record;
     let result;
-    let step = 100 / $words.length
+    let step = 100 / ($words.length + $quiz.length);
     let count = 0;
     let imageIndex = 0;
     let correct = false;
@@ -67,8 +71,6 @@
 
         recognition.on("result", (message) => {
             result = message.result.text;
-
-            console.log("vosk", result)
             validate(result, $words[imageIndex].word);
         });
 
@@ -93,16 +95,16 @@
 
             recognition.onend = (event) => {
                 recognition.stop();
-
                 document.getElementById("mic-elem").style.display = "none";
-
-                console.log("og", result);
                 validate(result, $words[imageIndex].word);
             };
         } catch (e) {
             document.getElementById("control").style.opacity = "0";
+            document.getElementById("control").style.pointerEvents = "none";
+
             initVosk().then(() => {
                 document.getElementById("control").style.opacity = "1";
+                document.getElementById("control").style.pointerEvents = "auto";
             });
         }
 
@@ -121,6 +123,7 @@
 
         if (browser) {
             document.getElementById("control").style.opacity = "0";
+            document.getElementById("control").style.pointerEvents = "none";
 
             const utterance = new SpeechSynthesisUtterance($words[imageIndex].word);
             utterance.lang = 'nl-NL';
@@ -128,19 +131,13 @@
             utterance.pitch = 1.2;
 
             speechSynthesis.speak(utterance);
-            utterance.onend = (event) => {
+            utterance.addEventListener("end", (event) => {
                 document.getElementById("control").style.opacity = "1";
-            }
+                document.getElementById("control").style.pointerEvents = "auto";
+            });
         }
     });
-
-
-    $: if (count === 100 - step) {
-        skip = false;
-        if (usesVosk) {
-            recognition.remove();
-            model.terminate();
-        }
+    $: if (imageIndex === $words.length - 1) {
         finished = true;
     }
 
@@ -152,18 +149,9 @@
         new Audio(incorrect_sound).play();
     }
 
-
     function handleNextClick() {
         document.getElementById("control").style.opacity = "0";
-
-        if (count === 100 - step) {
-            skip = false;
-            if (usesVosk) {
-                recognition.remove();
-                model.terminate();
-            }
-            finished = true;
-        }
+        document.getElementById("control").style.pointerEvents = "none";
 
         count += step;
         imageIndex = (imageIndex + 1) % $words.length
@@ -180,14 +168,16 @@
             utterance.pitch = 1.2;
 
             speechSynthesis.speak(utterance);
-            utterance.onend = (event) => {
+            utterance.addEventListener("end", (event) => {
                 document.getElementById("control").style.opacity = "1";
-            }
+                document.getElementById("control").style.pointerEvents = "auto";
+            });
         }
     }
 
     function handleRepeatClick() {
         document.getElementById("control").style.opacity = "0";
+        document.getElementById("control").style.pointerEvents = "none";
 
         wrong = false;
         correct = false;
@@ -202,17 +192,16 @@
             utterance.pitch = 1.2;
 
             speechSynthesis.speak(utterance);
-            utterance.onend = (event) => {
+            utterance.addEventListener("end", (event) => {
                 document.getElementById("control").style.opacity = "1";
-            }
+                document.getElementById("control").style.pointerEvents = "auto";
+            });
         }
     }
 
     async function handleMic() {
         document.getElementById("mic-elem").style.display = "block";
         hasStarted = true;
-
-        console.log("tries", tries);
 
         if (!record.isRecording()) {
             await record.startRecording();
@@ -226,10 +215,14 @@
     }
 
     let validate = (actual, target) => {
-        actual = actual.toLowerCase().trim();
-        target = target.toLowerCase().trim();
+        try {
+            actual = actual.toLowerCase().trim();
+            target = target.toLowerCase().trim();
+        } catch (e) {
+            // Empty input
+        }
 
-        if (tries >= 3) {
+        if (tries >= 2) {
             skip = true;
             return;
         }
@@ -270,19 +263,19 @@
 
             <div id="control" class="grid">
                 {#if skip}
-                    {#if count === 100 - step}
-                        <a href="/app/quiz"
-                           class="flex justify-center items-center border-solid border-2 border-black w-40 h-24 mt-8 rounded-full"
-                           style="grid-area: 1/1">
+                    {#if imageIndex === $words.length - 1}
+                        <AnchorButton
+                                href="/app/quiz"
+                                style="grid-area: 1/1">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                  stroke-width="1.5"
                                  stroke="currentColor" class="w-6 h-6">
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                       d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3"/>
                             </svg>
-                        </a>
+                        </AnchorButton>
                     {:else}
-                        <button class="flex justify-center items-center border-solid border-2 border-black w-40 h-24 mt-8 rounded-full"
+                        <Button
                                 on:click={handleNextClick}
                                 style="grid-area: 1/1">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -291,23 +284,22 @@
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                       d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3"/>
                             </svg>
-                        </button>
+                        </Button>
                     {/if}
                 {/if}
                 {#if correct}
                     {#if finished}
-                        <a href="/app/quiz"
-                           class="flex justify-center items-center border-solid border-2 border-black w-40 h-24 mt-8 rounded-full"
-                           style="grid-area: 1/1">
+                        <AnchorButton href="/app/quiz"
+                                      style="grid-area: 1/1">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                  stroke-width="1.5"
                                  stroke="currentColor" class="w-6 h-6">
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                       d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3"/>
                             </svg>
-                        </a>
+                        </AnchorButton>
                     {:else}
-                        <button class="flex justify-center items-center border-solid border-2 border-black w-40 h-24 mt-8 rounded-full"
+                        <Button
                                 on:click={handleNextClick}
                                 style="grid-area: 1/1">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -316,12 +308,11 @@
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                       d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3"/>
                             </svg>
-                        </button>
+                        </Button>
                     {/if}
                 {:else}
                     {#if !hasStarted}
-                        <button id="mic-button"
-                                class="flex justify-center items-center border-solid border-2 border-black w-40 h-24 mt-8 rounded-full"
+                        <Button id="mic-button"
                                 style="grid-area: 1/1"
                                 on:click={handleMic}>
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width=2
@@ -329,11 +320,10 @@
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                       d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z"/>
                             </svg>
-                        </button>
+                        </Button>
                     {:else}
                         {#if wrong}
-                            <button class="flex justify-center items-center border-solid border-2 border-black w-40 h-24 mt-8 rounded-full"
-                                    on:click={handleRepeatClick}
+                            <Button on:click={handleRepeatClick}
                                     style="grid-area: 1/1">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                      stroke-width="2"
@@ -341,7 +331,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round"
                                           d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/>
                                 </svg>
-                            </button>
+                            </Button>
                         {/if}
                     {/if}
                 {/if}

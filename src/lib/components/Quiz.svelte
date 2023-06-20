@@ -5,17 +5,21 @@
     import finished_sound from "$lib/sounds/static_sounds_feedback_completed.mp3";
 
     import {browser} from "$app/environment";
+    import Button from "$lib/components/Button.svelte";
+    import AnchorButton from "$lib/components/AnchorButton.svelte";
 
     export let quiz;
+    export let words;
     let correct = false;
     let wrong = false;
     let answered = false;
     let finished = false;
-    let step = 100 / $quiz.length;
+    let step = 100 / ($words.length + $quiz.length);
     let questionIndex = 0;
     let count = 0;
-    let percentage = count;
+    let percentage = step * $words.length;
     let correctAnswer = $quiz[questionIndex].find(answer => answer.correct);
+    let selected = null;
 
     $: {
         if (percentage >= 100) {
@@ -45,12 +49,13 @@
         utterance.pitch = 1.2;
 
         speechSynthesis.speak(utterance);
-        utterance.onend = (event) => {
+        utterance.addEventListener("end", (event) => {
             document.querySelectorAll("[id=quiz-answer]").forEach(element => element.disabled = false);
-        }
+        });
     }
 
-    function validate(answer) {
+    function validate() {
+        let answer = selected.correct;
         if (answered) return;
 
         if (percentage >= 100) {
@@ -58,8 +63,7 @@
         }
 
         if (answer) {
-            count++;
-            percentage = count * 100 / $quiz.length;
+            percentage += step;
             correct = true;
             wrong = false;
         } else {
@@ -67,6 +71,7 @@
             wrong = true;
         }
         answered = true;
+        selected = null;
     }
 
     function handleWrong() {
@@ -81,9 +86,9 @@
             utterance.pitch = 1.2;
 
             speechSynthesis.speak(utterance);
-            utterance.onend = (event) => {
+            utterance.addEventListener("end", (event) => {
                 document.querySelectorAll("[id=quiz-answer]").forEach(element => element.disabled = false);
-            }
+            });
         }
     }
 
@@ -109,9 +114,9 @@
             utterance.pitch = 1.2;
 
             speechSynthesis.speak(utterance);
-            utterance.onend = (event) => {
+            utterance.addEventListener("end", (event) => {
                 document.querySelectorAll("[id=quiz-answer]").forEach(element => element.disabled = false);
-            }
+            });
         }
     }
 
@@ -138,54 +143,63 @@
                 <u>{correctAnswer.word.split(" ")[0]}</u> {correctAnswer.word.split(" ")[1]}?</h1>
             <div class="flex p-8 space-x-4">
                 {#each question as answer}
-                    <button disabled id="quiz-answer" class="border-2 border-black rounded-xl p-4 w-1/4"
-                            on:click={validate(answer.correct)}>
-                        <img src="{answer.image}" alt="{answer.correct}"/>
-                    </button>
+                    <label class="w-1/4">
+                        <input type="radio" value={answer} bind:group={selected} id="quiz-answer" disabled class="hidden peer"/>
+                        <img src="{answer.image}"
+                             alt="{answer.correct}"
+                        class="border-2 border-black rounded-xl p-4 h-full object-contain peer-checked:bg-sky-200"/>
+                    </label>
                 {/each}
             </div>
         {/each}
 
         {#if finished}
-            <a href="/app/done"
-               class="flex justify-center items-center border-solid border-2 border-black w-40 h-24 mt-8 rounded-full">
+            <AnchorButton href="/app/done">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                      stroke="currentColor" class="w-6 h-6">
                     <path stroke-linecap="round" stroke-linejoin="round"
                           d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3"/>
                 </svg>
-            </a>
+            </AnchorButton>
         {:else}
-            {#if answered}
-                {#if finished}
-                    <a href="/app/done"
-                       class="flex justify-center items-center border-solid border-2 border-black w-40 h-24 mt-8 rounded-full">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                             stroke="currentColor" class="w-6 h-6">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                  d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3"/>
-                        </svg>
-                    </a>
-                {:else }
-                    {#if correct}
-                        <button class="flex justify-center items-center border-solid border-2 border-black w-40 h-24 mt-8 rounded-full"
-                                on:click={handleCorrect}>
+            {#if selected}
+                <Button on:click={validate}>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                         stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                              d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3"/>
+                    </svg>
+                </Button>
+            {:else}
+                {#if answered}
+                    {#if finished}
+                        <AnchorButton href="/app/done">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                                  stroke="currentColor" class="w-6 h-6">
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                       d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3"/>
                             </svg>
-                        </button>
+                        </AnchorButton>
                     {:else }
-                        <button class="flex justify-center items-center border-solid border-2 border-black w-40 h-24 mt-8 rounded-full"
-                                on:click={handleWrong}>
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                 stroke-width="2"
-                                 stroke="currentColor" class="w-6 h-6">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                      d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/>
-                            </svg>
-                        </button>
+                        {#if correct}
+                            <Button on:click={handleCorrect}>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                     stroke-width="1.5"
+                                     stroke="currentColor" class="w-6 h-6">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                          d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3"/>
+                                </svg>
+                            </Button>
+                        {:else }
+                            <Button on:click={handleWrong}>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                     stroke-width="2"
+                                     stroke="currentColor" class="w-6 h-6">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                          d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/>
+                                </svg>
+                            </Button>
+                        {/if}
                     {/if}
                 {/if}
             {/if}

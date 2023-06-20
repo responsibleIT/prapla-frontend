@@ -1,14 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AnalysisUIOptions">
+    <option name="ANALYZE_INJECTED_CODE" value="false" />
+  </component>
   <component name="AutoImportSettings">
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6e14316a-757f-42fe-92fc-a74bbe0ea520" name="Changes" comment="" />
+    <list default="true" id="6e14316a-757f-42fe-92fc-a74bbe0ea520" name="Changes" comment="update port">
+      <change afterPath="$PROJECT_DIR$/src/lib/components/AnchorButton.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BOT FLOW PRAPLA - TEST 0.0.pdf" beforeDir="false" afterPath="$PROJECT_DIR$/BOT FLOW PRAPLA - TEST 0.0.pdf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/components/Button.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/components/Button.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/components/Quiz.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/components/Quiz.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/components/Wordlist.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/components/Wordlist.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/routes/app/+page.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/app/+page.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/routes/app/done/+page.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/app/done/+page.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/routes/app/list/+page.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/app/list/+page.svelte" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/routes/app/quiz/+page.svelte" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/app/quiz/+page.svelte" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="components/Test" />
+        <option value="test/+page" />
+        <option value="Quiz" />
+        <option value="Button" />
+        <option value="JavaScript File" />
+        <option value="LinkButton" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
@@ -22,23 +51,59 @@
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "WebServerToolWindowFactoryState": "false",
+    "dart.analysis.tool.window.visible": "false",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "/Users/tabishmac/Projects/Prapla/prapla-frontend/src/lib/sounds",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
+    "run.code.analysis.last.selected.profile": "pProject Default",
     "settings.editor.selected.configurable": "preferences.pluginManager",
+    "show.migrate.to.gradle.popup": "false",
+    "ts.external.directory.path": "/Users/tabishmac/Library/Application Support/JetBrains/Toolbox/apps/IDEA-U/ch-0/231.9011.34/IntelliJ IDEA.app/Contents/plugins/javascript-impl/jsLanguageServicesImpl/external",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
   <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/lib/sounds" />
+      <recent name="$PROJECT_DIR$/src" />
+      <recent name="$PROJECT_DIR$/src/lib" />
+      <recent name="$PROJECT_DIR$/src/lib/images" />
+      <recent name="$PROJECT_DIR$/src/routes/test" />
+    </key>
     <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/src/lib/audio" />
+      <recent name="$PROJECT_DIR$/src/lib" />
+      <recent name="$PROJECT_DIR$/src/lib/models" />
+      <recent name="$PROJECT_DIR$/static" />
+      <recent name="$PROJECT_DIR$/src/routes/app" />
     </key>
   </component>
-  <component name="RunManager" selected="npm.dev">
-    <configuration name="dev JavaScript" type="JavascriptDebugType" uri="http://127.0.0.1:5173">
+  <component name="RunManager" selected="npm.dev chrome">
+    <configuration name="build" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="build" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
       <method v="2" />
+    </configuration>
+    <configuration name="dev chrome" type="js.build_tools.npm">
+      <package-json value="$PROJECT_DIR$/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="dev" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2">
+        <option name="LaunchBrowser.Before.Run" browser="98ca6316-2f89-46d9-a9e5-fa9e2b0625b3" url="http://127.0.0.1:5173" />
+      </method>
     </configuration>
     <configuration name="dev" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
       <package-json value="$PROJECT_DIR$/package.json" />
@@ -49,15 +114,29 @@
       <node-interpreter value="project" />
       <envs />
       <method v="2">
-        <option name="LaunchBrowser.Before.Run" url="http://127.0.0.1:5173" withDebugger="true" />
+        <option name="LaunchBrowser.Before.Run" browser="98ca6316-2f89-46d9-a9e5-fa9e2b0625b3" url="http://127.0.0.1:5173" />
       </method>
     </configuration>
+    <configuration name="preview" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="preview" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
     <list>
-      <item itemvalue="JavaScript Debug.dev JavaScript" />
+      <item itemvalue="npm.dev chrome" />
+      <item itemvalue="npm.build" />
+      <item itemvalue="npm.preview" />
       <item itemvalue="npm.dev" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="npm.preview" />
+        <item itemvalue="npm.build" />
         <item itemvalue="npm.dev" />
       </list>
     </recent_temporary>
@@ -71,11 +150,106 @@
       <option name="presentableId" value="Default" />
       <updated>1678265584766</updated>
       <workItem from="1678265586103" duration="265000" />
-      <workItem from="1678265877857" duration="1532000" />
+      <workItem from="1678265877857" duration="1793000" />
+      <workItem from="1678271342766" duration="989000" />
+      <workItem from="1678357978749" duration="340000" />
+      <workItem from="1678359499681" duration="5519000" />
+      <workItem from="1679474937925" duration="4573000" />
+      <workItem from="1679561552182" duration="2976000" />
+      <workItem from="1680076154396" duration="962000" />
+      <workItem from="1682505390822" duration="13874000" />
+      <workItem from="1683100059187" duration="7000" />
+      <workItem from="1683877459687" duration="5000" />
+      <workItem from="1683877473483" duration="2220000" />
+      <workItem from="1683883059736" duration="5000" />
+      <workItem from="1683892011078" duration="5969000" />
+      <workItem from="1684309100164" duration="171000" />
+      <workItem from="1684309331506" duration="154000" />
+      <workItem from="1684309495753" duration="14314000" />
+      <workItem from="1684916081996" duration="4740000" />
+      <workItem from="1684940574603" duration="367000" />
+      <workItem from="1686123664328" duration="25000" />
+      <workItem from="1686123698614" duration="2689000" />
+      <workItem from="1686138078668" duration="6549000" />
+      <workItem from="1686728173974" duration="1702000" />
+      <workItem from="1686731204471" duration="38486000" />
+      <workItem from="1687138822953" duration="13257000" />
+      <workItem from="1687290625810" duration="8379000" />
     </task>
+    <task id="LOCAL-00001" summary="styling">
+      <created>1684314065763</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1684314065763</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Almost done!">
+      <created>1684327768613</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1684327768613</updated>
+    </task>
+    <task id="LOCAL-00003" summary="big step in speech">
+      <created>1686148819985</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1686148819985</updated>
+    </task>
+    <task id="LOCAL-00004" summary="almost done">
+      <created>1687138854949</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1687138854949</updated>
+    </task>
+    <task id="LOCAL-00005" summary="make buildable">
+      <created>1687191707008</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1687191707008</updated>
+    </task>
+    <task id="LOCAL-00006" summary="bump">
+      <created>1687192046009</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1687192046009</updated>
+    </task>
+    <task id="LOCAL-00007" summary="update port">
+      <created>1687192792779</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1687192792779</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="styling" />
+    <MESSAGE value="Almost done!" />
+    <MESSAGE value="big step in speech" />
+    <MESSAGE value="almost done" />
+    <MESSAGE value="make buildable" />
+    <MESSAGE value="bump" />
+    <MESSAGE value="update port" />
+    <option name="LAST_COMMIT_MESSAGE" value="update port" />
   </component>
 </project>

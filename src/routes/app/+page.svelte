@@ -2,6 +2,10 @@
     import {words, user, quiz} from "$lib/store.js";
     import Button from "$lib/components/Button.svelte";
     import {browser} from '$app/environment';
+    import AnchorButton from "$lib/components/AnchorButton.svelte";
+    import {onMount} from "svelte";
+    import WaveSurfer from "wavesurfer.js";
+    import RecordPlugin from "$lib/record.js";
 
 
     let speechSynthesis;
@@ -11,6 +15,10 @@
     let message = '';
     let hasStarted = false;
     let auth = false;
+    let recognition;
+    let result;
+    let wavesurfer;
+    let record;
 
     let getWordList = async (msg) => {
         try {
@@ -22,7 +30,7 @@
             user.set(result[0]);
 
 
-            result.shift();
+            await result.shift();
             words.set(result[0]);
             quiz.set(result[1]);
 
@@ -32,9 +40,49 @@
         }
     }
 
-    function handleMic() {
+    async function handleMic() {
         hasStarted = true;
+
+        if (!navigator.userAgent.toLowerCase().indexOf('firefox') > -1) {
+            await record.startRecording();
+            recognition.start();
+        }
     }
+
+    onMount(async () => {
+        if(browser) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+            recognition = new SpeechRecognition();
+            recognition.lang = 'nl-NL';
+            recognition.continuous = false;
+            recognition.interimResults = true;
+            recognition.maxAlternatives = 5;
+
+            recognition.onresult = (event) => {
+                result = event.results[0][0].transcript;
+            }
+
+            recognition.onend = (event) => {
+                recognition.stop();
+                record.stopRecording();
+                document.getElementById("mic-elem").style.display = "none";
+                getWordList(result);
+            };
+
+            wavesurfer = WaveSurfer.create({
+                container: document.getElementById("mic-elem"),
+                waveColor: 'slategray',
+                normalize: true,
+                interact: false,
+                cursorWidth: 0,
+                hideScrollbar: true
+            });
+            record = wavesurfer.registerPlugin(RecordPlugin.create())
+            record.on("stopRecording", () => {
+                document.getElementById("mic-elem").style.display = "none";
+            })
+        }
+    });
 
     if (browser) {
         const utterance = new SpeechSynthesisUtterance("Druk op de bovenste knop voor een willekeurige lijst... Of... druk op de onderste knop en spreek jouw geheime spreuk");
@@ -43,10 +91,10 @@
         utterance.pitch = 1.1;
 
         speechSynthesis.speak(utterance);
-        utterance.onend = (event) => {
+        utterance.addEventListener("end", (event) => {
             document.getElementById("random-button").style.display = "flex";
             document.getElementById("spell-button").style.display = "flex";
-        }
+        });
     }
 
     async function randomList() {
@@ -80,7 +128,7 @@
                 class="text-slate-400">×</b></a>
     </div>
     <div class="grow"></div>
-    <div class="flex flex-col justify-center items-center">
+    <div id="control" class="flex flex-col justify-center items-center">
         <h1 class="text-2xl text-center">{message}</h1>
         {#if !hasStarted}
             <h1 class="text-2xl text-center">Druk op de knop voor een willekeurige lijst</h1>
@@ -113,16 +161,20 @@
                 <input class="bg-gray-50 text-gray-900 text-sm border-solid border-2 border-black w-40 h-24 mt-8 rounded-full"
                        type="text" on:change={(e) => getWordList(e.target.value) }>
             {:else}
-                <a class="flex justify-center items-center border-solid border-2 border-black w-40 h-24 mt-8 rounded-full"
-                   href="app/list">
+                <AnchorButton
+                        href="app/list">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                          stroke="currentColor" class="w-6 h-6">
                         <path stroke-linecap="round" stroke-linejoin="round"
                               d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3"/>
                     </svg>
-                </a>
+                </AnchorButton>
             {/if}
         {/if}
     </div>
-    <div class="grow"/>
+
+    <div id="mic-elem" class="absolute w-40 h-24 mt-8 pointer-events-none bottom-20 z-20"
+         style="grid-area: 1/1">
+    </div>
+    <div class="grow"></div>
 </div>

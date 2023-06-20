@@ -9,5 +9,5 @@
 </script>
 
 {#if $quiz.length !== 0}
-    <Quiz quiz={quiz}/>
+    <Quiz quiz={quiz} words={words}/>
 {/if}
